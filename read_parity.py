@@ -124,20 +124,28 @@ print("convert to bytes complete")
 del out1
 gc.collect()
 signature = out[:9]
-count,size,length = struct.unpack("HQH",out[9:27])
+count,size = struct.unpack("HQ",out[9:25])
 if signature != b"ROGER_PAR":
     print("incorrect/corrupted file")
     out = []
-out = out[27:]
-while len(out) != 0:
+out = out[25:]
+files_read = 0
+while files_read != count:
+    if files_read != 0:
+        sig = out[:9]
+        out = out[9:]
+        print(sig)
+    length = struct.unpack("H",out[:2])[0]
+    out = out[2:]
+    files_read +=1
     filename = out[:length]
     out = out[length:]
     filesize = struct.unpack("Q",out[:8])[0]
     out = out[8:]
-    content = out[:size]
+    content = out[:filesize]
     if content.endswith(b"\x00"):
         content = content[:-1]
-    out = out[size:]
+    out = out[filesize:]
     file = open(filename,"wb")
     file.write(content)
     file.close()

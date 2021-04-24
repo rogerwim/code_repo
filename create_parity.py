@@ -9,16 +9,19 @@ file = open(filen,"rb")
 temp += b"ROGER_PAR" # signature
 temp += b"\x00"*18
 temp += filen.encode() # filename
-temp += struct.pack("Q", os.path.getsize(filen))
+if (len(temp)+ os.path.getsize(filen))% 2 == 1:
+    temp += struct.pack("Q", os.path.getsize(filen)+1) # size of file
+else:
+    temp += struct.pack("Q", os.path.getsize(filen)) # size of file
 temp += file.read()
+if len(temp) % 2 == 1:
+    temp += b"\x00"
 file.close()
 size = len(temp)
 temp = bytearray(temp)
 begin = temp[:9]
 end = temp [27:]
 temp = (begin + struct.pack("HQH",1,size,len(filen)) + end ) # file count, total size of file, length of filename
-if len(temp) % 2 == 1:
-    temp += b"\x00"
 block1 = b""
 block2 = b""
 par = b""
@@ -45,5 +48,5 @@ out1.write(block1)
 out2.write(block2)
 out3.write(par)
 out1.close()
-out2.close()
+out2.close();
 out3.close()
