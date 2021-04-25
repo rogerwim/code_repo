@@ -123,29 +123,29 @@ out = out1.tobytes()
 print("convert to bytes complete")
 del out1
 gc.collect()
-    sig = out[:9]
-    print(sig)
-    count,sizet = struct.unpack("HQ",out[9:25])
-    print("number of files:",count)
-    print("total size:",sizet)
-    read = 0
-    offset = 25
-    sizes = []
-    while read != count:
-        if read != 0:
-            sign = out[:9]
-            print(sign)
-            offset += 9
-        length = struct.unpack("H",out[offset:offset+2])[0]
-        offset += 2 + length
-        print("length of filename:",length)
-        print("filename:", out[offset-length:offset].decode())
-        size = struct.unpack("Q",out[offset:offset+8])[0]
-        offset += 8 + size
-        print("size:",size)
-        sizes.append([offset-length-size-10,length,size,offset])
-        read += 1
-
+sig = out[:9]
+print(sig)
+count,sizet = struct.unpack("HQ",out[9:25])
+print("number of files:",count)
+print("total size:",sizet)
+read = 0
+offset = 25
+sizes = []
+while read != count:
+    if read != 0:
+        sign = out[:9]
+        print(sign)
+        offset += 9
+    length = struct.unpack("H",out[offset:offset+2])[0]
+    offset += 2 + length
+    print("length of filename:",length)
+    print("filename:", out[offset-length:offset].decode())
+    size = struct.unpack("Q",out[offset:offset+8])[0]
+    offset += 8 + size
+    print("size:",size)
+    sizes.append([offset-length-size-10,length,size,offset])
+    read += 1
+print(sizes)
 signature = out[:9]
 count,size = struct.unpack("HQ",out[9:25])
 if signature != b"ROGER_PAR":
