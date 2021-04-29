@@ -17,13 +17,13 @@ cam.set(4, 1080);
 
 img_counter = 0
 
-encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
+encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 50]
 
 while True:
     ret, frame = cam.read()
     result, frame = cv2.imencode('.jpg', frame, encode_param)
-    #data = zlib.compress(pickle.dumps(frame, 0))
-    data = pickle.dumps(frame, 0)
+    data = zlib.compress(pickle.dumps(frame, 0))
+    #data = pickle.dumps(frame, 0)
     size = len(data)
 
 

@@ -36,7 +36,7 @@ while True:
         data += conn.recv(4096)
     frame_data = data[:msg_size]
     data = data[msg_size:]
-
+    frame_data = zlib.decompress(frame_data)
     frame=pickle.loads(frame_data, fix_imports=True, encoding="bytes")
     frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
     cv2.imshow('ImageWindow',frame)
