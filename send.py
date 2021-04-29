@@ -7,13 +7,13 @@ import pickle
 import zlib
 
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client_socket.connect(('127.0.0.1', 8485))
+client_socket.connect(('192.168.178.66', 8485))
 connection = client_socket.makefile('wb')
 
-cam = cv2.VideoCapture(0)
+cam = cv2.VideoCapture(1)
 
-cam.set(3, 320);
-cam.set(4, 240);
+cam.set(3, 1920);
+cam.set(4, 1080);
 
 img_counter = 0
 
@@ -22,7 +22,7 @@ encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
 while True:
     ret, frame = cam.read()
     #result, frame = cv2.imencode('.jpg', frame, encode_param)
-#    data = zlib.compress(pickle.dumps(frame, 0))
+    data = zlib.compress(pickle.dumps(frame, 0))
     data = pickle.dumps(frame, 0)
     size = len(data)
 
