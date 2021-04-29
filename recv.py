@@ -18,6 +18,25 @@ s.listen(10)
 print('Socket now listening')
 
 conn,addr=s.accept()
+session_key = get_random_bytes(16)
+nonce = get_random_bytes(8)
+
+# Encrypt the session key with the public RSA key
+cipher_rsa = PKCS1_OAEP.new(recipient_key)
+enc_session_key = cipher_rsa.encrypt(session_key)
+
+public_key = pickle.loads(conn.recv(8192)['public key'])
+recipient_key = RSA.import_key(public_key)
+session_key = get_random_bytes(16)
+nonce = get_random_bytes(8)
+# Encrypt the session key with the public RSA key
+cipher_rsa = PKCS1_OAEP.new(recipient_key)
+enc_session_key = cipher_rsa.encrypt(session_key)
+
+# Encrypt the data with the AES session key
+cipher_aes = AES.new(session_key, AES.MODE_EAX,nonce=nonce)
+conn.sendall(pickle.dumps({'encrypted session key':enc_session_key,
+                                    'nonce':nonce}))
 
 data = b""
 payload_size = struct.calcsize(">L")
