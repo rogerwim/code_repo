@@ -37,8 +37,13 @@ connection = client_socket.makefile('wb')
 client_socket.sendall(pickle.dumps({"public key":public_key}))
 time.sleep(0.5)
 a = client_socket.recv(8192)
-exit()
-cipher_aes = AES.new(session_key, AES.MODE_CTR,nonce = nonce)
+data = pickle.loads(a)
+enc_key = data['encrypted session key']
+nonce = data['nonce']
+decrypter = PKCS1_OAEP.new(RSA.import_key(private_key))
+key = decrypter.decrypt(enc_key)
+#exit()
+cipher_aes = AES.new(key, AES.MODE_CTR,nonce = nonce)
 cam = cv2.VideoCapture(1)
 
 cam.set(3, 1920);
@@ -46,18 +51,18 @@ cam.set(4, 1080);
 
 img_counter = 0
 
-encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 30]
+encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 50]
 
 while True:
     ret, frame = cam.read()
     result, frame = cv2.imencode('.jpg', frame, encode_param)
     data = zlib.compress(pickle.dumps(frame, 0))
     #data = pickle.dumps(frame, 0)
+    #print(data)
     data = cipher_aes.encrypt(data)
+    #print(data)
     size = len(data)
-
     print("{}: {}".format(img_counter, size))
     client_socket.sendall(struct.pack(">L", size) + data)
     img_counter += 1
-
 cam.release()

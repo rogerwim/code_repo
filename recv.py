@@ -5,7 +5,9 @@ import pickle
 import numpy as np
 import struct ## new
 import zlib
-
+from Crypto.PublicKey import RSA
+from Crypto.Random import get_random_bytes
+from Crypto.Cipher import AES, PKCS1_OAEP
 HOST=''
 PORT=8485
 
@@ -20,13 +22,13 @@ print('Socket now listening')
 conn,addr=s.accept()
 session_key = get_random_bytes(16)
 nonce = get_random_bytes(8)
-
+public_key = pickle.loads(conn.recv(8192))['public key']
+recipient_key = RSA.import_key(public_key)
 # Encrypt the session key with the public RSA key
 cipher_rsa = PKCS1_OAEP.new(recipient_key)
 enc_session_key = cipher_rsa.encrypt(session_key)
 
-public_key = pickle.loads(conn.recv(8192)['public key'])
-recipient_key = RSA.import_key(public_key)
+
 session_key = get_random_bytes(16)
 nonce = get_random_bytes(8)
 # Encrypt the session key with the public RSA key
@@ -34,10 +36,10 @@ cipher_rsa = PKCS1_OAEP.new(recipient_key)
 enc_session_key = cipher_rsa.encrypt(session_key)
 
 # Encrypt the data with the AES session key
-cipher_aes = AES.new(session_key, AES.MODE_EAX,nonce=nonce)
+cipher_aes = AES.new(session_key, AES.MODE_CTR,nonce=nonce)
 conn.sendall(pickle.dumps({'encrypted session key':enc_session_key,
                                     'nonce':nonce}))
-
+print(session_key,nonce)
 data = b""
 payload_size = struct.calcsize(">L")
 print("payload_size: {}".format(payload_size))
@@ -55,6 +57,7 @@ while True:
         data += conn.recv(4096)
     frame_data = data[:msg_size]
     data = data[msg_size:]
+    frame_data = cipher_aes.decrypt(frame_data)
     frame_data = zlib.decompress(frame_data)
     frame=pickle.loads(frame_data, fix_imports=True, encoding="bytes")
     frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
