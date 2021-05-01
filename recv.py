@@ -8,6 +8,9 @@ import zlib
 from Crypto.PublicKey import RSA
 from Crypto.Random import get_random_bytes
 from Crypto.Cipher import AES, PKCS1_OAEP
+from Crypto.Hash import SHA256
+from Crypto.Signature import pkcs1_15
+import time
 HOST=''
 PORT=8485
 
@@ -22,8 +25,24 @@ print('Socket now listening')
 conn,addr=s.accept()
 session_key = get_random_bytes(16)
 nonce = get_random_bytes(8)
-public_key = pickle.loads(conn.recv(8192))['public key']
+data_in = pickle.loads(conn.recv(8192))
+public_key = data_in["public key"]
+signature = data_in["signature"]
 recipient_key = RSA.import_key(public_key)
+ip = addr[0]
+print(data_in)
+h = SHA256.new(ip.encode())
+print(addr,h.hexdigest())
+while True:
+        try:
+                pkcs1_15.new(recipient_key).verify(h,signature)
+                print("signature correct")
+                break
+        except:
+                print("signature error, abort")
+                conn.sendall(b"i do not like you, you have a signature error, i will give you 1 more chance, please sign your ip(next messsage)")
+                conn.sendall(pickle.dumps({"thing to sign":ip}))
+                signature = pickle.loads(conn.recv(8192))['signature']
 # Encrypt the session key with the public RSA key
 cipher_rsa = PKCS1_OAEP.new(recipient_key)
 enc_session_key = cipher_rsa.encrypt(session_key)
@@ -46,7 +65,7 @@ print("payload_size: {}".format(payload_size))
 while True:
     while len(data) < payload_size:
         print("Recv: {}".format(len(data)))
-        data += conn.recv(4096)
+        data += conn.recv(8192)
 
     print("Done Recv: {}".format(len(data)))
     packed_msg_size = data[:payload_size]
@@ -54,7 +73,7 @@ while True:
     msg_size = struct.unpack(">L", packed_msg_size)[0]
     print("msg_size: {}".format(msg_size))
     while len(data) < msg_size:
-        data += conn.recv(4096)
+        data += conn.recv(8192)
     frame_data = data[:msg_size]
     data = data[msg_size:]
     frame_data = cipher_aes.decrypt(frame_data)
