@@ -3,7 +3,9 @@ import struct
 import numpy as np
 import hashlib
 import gc
+import os
 name = sys.argv[1]
+name = os.path.abspath(os.path.expanduser(name))
 prefer = 0 #1 is assume block 1 and 2 are correct, 2 is assume parity and block 1 is correct, 3 is assume parity and block 2 is correct
 name1 = name + ".bk1"
 name2 = name + ".bk2"
@@ -144,10 +146,14 @@ while read != count:
     size = struct.unpack("Q",out[offset:offset+8])[0]
     offset += 8 + size
     print("size:",size)
-    sizes.append([offset-length-size-10,length,size,offset,filename])
+    sizes.append({"start of file":offset-length-size-10,"length of filename":length,"size of file":size,"end of file":offset,"filename":filename})
     read += 1
+filenames = [s["filename"] for s in sizes]
+common = os.path.commonpath(filenames)
+current = os.path.abspath(os.path.expanduser(os.curdir))
+target_dir = current + "/" + common.split("/")[-1]
+print(target_dir)
 print(sizes)
-exit()
 signature = out[:9]
 count,size = struct.unpack("HQ",out[9:25])
 if signature != b"ROGER_PAR":
@@ -167,6 +173,10 @@ while files_read != count:
     out = out[length:]
     filesize = struct.unpack("Q",out[:8])[0]
     out = out[8:]
+    filename = filename.replace(common.encode(),b'',1)
+    filename = filename.replace(b'',target_dir.encode(),1)
+    os.makedirs(b'/'.join(filename.split(b"/")[:-1]),exist_ok=True)
+    print(filename)
     content = out[:filesize]
     if content.endswith(b"\x00"):
         content = content[:-1]
