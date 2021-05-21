@@ -5,15 +5,22 @@ import pickle
 import numpy as np
 import struct ## new
 import zlib
+import string
 from Crypto.PublicKey import RSA
 from Crypto.Random import get_random_bytes
 from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.Hash import SHA256
 from Crypto.Signature import pkcs1_15
 import time
+import random
 HOST=''
 PORT=8485
-
+def generate(l):
+    randomstr = b''
+    for i in range(1,l):
+        randomstr += bytes([random.randint(0,255)])
+    #print(randomstr)
+    return randomstr
 s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 print('Socket created')
 
@@ -29,20 +36,22 @@ data_in = pickle.loads(conn.recv(8192))
 public_key = data_in["public key"]
 signature = data_in["signature"]
 recipient_key = RSA.import_key(public_key)
-ip = addr[0]
 print(data_in)
-h = SHA256.new(ip.encode())
-print(addr,h.hexdigest())
+print(addr)
 while True:
         try:
                 pkcs1_15.new(recipient_key).verify(h,signature)
                 print("signature correct")
                 break
         except:
+                thing = generate(100)
+                h = SHA256.new(thing)
+                print(h.hexdigest())
                 print("signature error, abort")
-                conn.sendall(b"i do not like you, you have a signature error, i will give you 1 more chance, please sign your ip(next messsage)")
-                conn.sendall(pickle.dumps({"thing to sign":ip}))
+                conn.sendall(b"i do not like you, you have a signature error, i will give you 1 more chance, please sign the next messsage")
+                conn.sendall(pickle.dumps({"thing to sign":thing}))
                 signature = pickle.loads(conn.recv(8192))['signature']
+                print(signature)
 # Encrypt the session key with the public RSA key
 cipher_rsa = PKCS1_OAEP.new(recipient_key)
 enc_session_key = cipher_rsa.encrypt(session_key)

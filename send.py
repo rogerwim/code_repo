@@ -32,7 +32,7 @@ i = 0
 while True:
     try:
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client_socket.connect(('192.168.178.66', 8485))
+        client_socket.connect(('127.0.0.1',8485)) #192.168.178.66', 8485))
         break
     except:
         i += 1
@@ -42,12 +42,13 @@ client_socket.sendall(pickle.dumps({"public key":public_key,"signature":signatur
 while True:
     a = client_socket.recv(8192)
     print(a)
-    if a == b'i do not like you, you have a signature error, i will give you 1 more chance, please sign your ip(next messsage)':
+    if a == b'i do not like you, you have a signature error, i will give you 1 more chance, please sign the next messsage':
         print("public varibale is probably wrong")
         a = client_socket.recv(8192)
+        print(a)
         data = pickle.loads(a)
         ip = data["thing to sign"]
-        h = SHA256.new(ip.encode())
+        h = SHA256.new(ip)
         signature = pkcs1_15.new(key).sign(h)
         print(h.hexdigest(),signature,ip,data)
         client_socket.sendall(pickle.dumps({"signature":signature}))
@@ -62,7 +63,7 @@ key = decrypter.decrypt(enc_key)
 print(key,nonce)
 #exit()
 cipher_aes = AES.new(key, AES.MODE_CTR,nonce = nonce)
-cam = cv2.VideoCapture(1)
+cam = cv2.VideoCapture(0)
 
 cam.set(3, 1280)
 cam.set(4, 720)

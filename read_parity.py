@@ -140,12 +140,14 @@ while read != count:
     offset += 2 + length
     print("length of filename:",length)
     print("filename:", out[offset-length:offset].decode())
+    filename = out[offset-length:offset].decode()
     size = struct.unpack("Q",out[offset:offset+8])[0]
     offset += 8 + size
     print("size:",size)
-    sizes.append([offset-length-size-10,length,size,offset])
+    sizes.append([offset-length-size-10,length,size,offset,filename])
     read += 1
 print(sizes)
+exit()
 signature = out[:9]
 count,size = struct.unpack("HQ",out[9:25])
 if signature != b"ROGER_PAR":

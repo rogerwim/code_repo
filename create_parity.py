@@ -5,6 +5,7 @@ import numpy as np
 import hashlib
 temp = b""
 filen = sys.argv[1]
+filen = os.path.abspath(os.path.expanduser(sys.argv[1]))
 file = open(filen,"rb")
 temp += b"ROGER_PAR" # signature
 temp += b"\x00"*18
